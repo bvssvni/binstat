@@ -9,7 +9,9 @@ extern crate debug;
 
 pub use binnode::BinNode;
 pub use bingraph::BinGraph;
+pub use symmetry::Symmetry;
 
 mod binnode;
 mod bingraph;
+mod symmetry;
 
