@@ -32,7 +32,7 @@ impl BinNode {
     pub fn with_choices(&self, f: |i: uint|) {
         for i in range(0, self.choices.len())
             .zip(self.choices.iter())
-            .filter(|&(_, v)| v == true)
+            .filter(|&(_, v)| v)
             .map(|(i, _)| i
         ) {
             f(i)
@@ -46,7 +46,12 @@ impl BinNode {
         graph: &BinGraph<TAction>, 
         f: |i: uint|
     ) {
-        self.with_choices(|i| if !graph.contains_choice(self, i) { f(i) })
+        self.with_choices(|i| if !graph.contains_choice(self, i) {
+            // TEST
+            println!("i: {}", i);
+
+            f(i) 
+        })
     }
 }
 
@@ -76,17 +81,26 @@ impl<TAction> BinGraph<TAction> {
 
     /// Returns true if the graph contains a choice.
     pub fn contains_choice(&self, state: &BinNode, i: uint) -> bool {
-        self.data.iter().any(|st|
-            range(0, st.choices.len()).all(|j|
-                state.choices.get(j) == if j == i {
-                        !state.choices.get(j)
-                    } else {
-                        state.choices.get(j)
-                    }
-            )
-        )
+        self.data.iter().any(|n| {
+            range(0, n.state.len()).all(|j| {
+                let state_val = state.state.get(j);
+                let state_val = if i == j { !state_val } else { state_val };
+                n.state.get(j) == state_val
+            })
+        })
     }
 
+    /// Finds out if graph is complete.
+    pub fn is_complete(&self) -> bool {
+        let mut complete = true;
+        for node in self.data.iter() {
+            node.with_choices_not_in(self, |_| complete = false);
+            if !complete { return false }
+        }
+
+        true
+    }
+    
     /// Returns the suggestion in default state that are open to all choices.
     pub fn default_suggestion(&self) -> BinNode {
         let open_for_all_choices: Vec<(bool, bool)> =
@@ -121,9 +135,24 @@ fn test_exclusive() {
     assert!(!g.contains_choice(&suggestion, 0));
 
     g.push_pairs([
-        (true, true), // is swimming, can stop.
-        (false, false), // is not reading book, can't read book.
+        (true, true), // can stop swimming.
+        (false, false), // can't read book.
     ]); 
+
+    // TEST
+    println!("NOW");
+
+    assert!(g.contains_choice(&suggestion, 0));
+    assert!(g.contains_choice(&g.data[1], 0));
+
+    assert!(!g.is_complete());
+
+    g.push_pairs([
+        (false, false), // can't start swimming.
+        (true, true), // can stop reading book.
+    ]);
+
+    assert!(g.is_complete()); 
 }
 
 
