@@ -11,17 +11,17 @@ use std::collections::Bitv;
 
 /// Contains a binary state and the choices.
 #[deriving(PartialEq, Eq, Show, Clone)]
-pub struct BinStateChoices {
+pub struct BinNode {
     /// The state composed of bits.
     pub state: Bitv,
     /// The choices represented as bits that can be flipped.
     pub choices: Bitv
 }
 
-impl BinStateChoices {
+impl BinNode {
     /// Gets pairs from pair of booleans.
-    pub fn from_pairs(pairs: &[(bool, bool)]) -> BinStateChoices {
-        BinStateChoices {
+    pub fn from_pairs(pairs: &[(bool, bool)]) -> BinNode {
+        BinNode {
             state: pairs.iter().map(|&(a, _)| a).collect(),
             choices: pairs.iter().map(|&(_, b)| b).collect()
         }
@@ -43,7 +43,7 @@ impl BinStateChoices {
 /// Models a multidimensional binary state.
 pub struct BinGraph<TAction> {
     /// The states and the bits that can be flipped.
-    pub data: Vec<BinStateChoices>,
+    pub data: Vec<BinNode>,
     /// A description the action that takes when flipping bits.
     pub actions: Vec<TAction>,
 }
@@ -61,11 +61,11 @@ impl<TAction> BinGraph<TAction> {
     ///
     /// The first bool indicate state, the second whether it can change.
     pub fn push_pairs(&mut self, pairs: &[(bool, bool)]) {
-        self.data.push(BinStateChoices::from_pairs(pairs));
+        self.data.push(BinNode::from_pairs(pairs));
     }
 
     /// Returns true if the graph contains a choice.
-    pub fn contains_choice(&self, state: &BinStateChoices, i: uint) -> bool {
+    pub fn contains_choice(&self, state: &BinNode, i: uint) -> bool {
         self.data.iter().any(|st|
             range(0, st.choices.len()).all(|j|
                 state.choices.get(j) == if j == i {
@@ -78,14 +78,14 @@ impl<TAction> BinGraph<TAction> {
     }
 
     /// Returns the suggestion in default state that are open to all choices.
-    pub fn default_suggestion(&self) -> BinStateChoices {
+    pub fn default_suggestion(&self) -> BinNode {
         let open_for_all_choices: Vec<(bool, bool)> =
             range(0, self.actions.len()).map(|_| (false, true)).collect();
-        BinStateChoices::from_pairs(open_for_all_choices.as_slice())
+        BinNode::from_pairs(open_for_all_choices.as_slice())
     }
 
     /// Suggests a missing state with choices.
-    pub fn suggestion(&self) -> Option<BinStateChoices> {
+    pub fn suggestion(&self) -> Option<BinNode> {
         if self.data.len() == 0 {
             Some(self.default_suggestion())
         } else {
@@ -101,7 +101,7 @@ fn test_exclusive() {
     g.actions.push("Read a book");
 
     let suggestion = g.suggestion().unwrap();
-    assert_eq!(suggestion, BinStateChoices::from_pairs([
+    assert_eq!(suggestion, BinNode::from_pairs([
         (false, true),
         (false, true)
     ]));
