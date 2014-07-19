@@ -38,6 +38,16 @@ impl BinNode {
             f(i)
         }
     }
+
+    /// Calls closure for all choices that are not in graph.
+    #[inline(always)]
+    pub fn with_choices_not_in<TAction>(
+        &self, 
+        graph: &BinGraph<TAction>, 
+        f: |i: uint|
+    ) {
+        self.with_choices(|i| if !graph.contains_choice(self, i) { f(i) })
+    }
 }
 
 /// Models a multidimensional binary state.
