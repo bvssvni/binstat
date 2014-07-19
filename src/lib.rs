@@ -27,7 +27,7 @@ impl BinStateChoices {
         }
     }
 
-    /// Iterate for each available choice.
+    /// Call closure for each available choice.
     #[inline(always)]
     pub fn with_choices(&self, f: |i: uint|) {
         for i in range(0, self.choices.len())
@@ -64,6 +64,19 @@ impl<TAction> BinGraph<TAction> {
         self.data.push(BinStateChoices::from_pairs(pairs));
     }
 
+    /// Returns true if the graph contains a choice.
+    pub fn contains_choice(&self, state: &BinStateChoices, i: uint) -> bool {
+        self.data.iter().any(|st|
+            range(0, st.choices.len()).all(|j|
+                state.choices.get(j) == if j == i {
+                        !state.choices.get(j)
+                    } else {
+                        state.choices.get(j)
+                    }
+            )
+        )
+    }
+
     /// Returns the suggestion in default state that are open to all choices.
     pub fn default_suggestion(&self) -> BinStateChoices {
         let open_for_all_choices: Vec<(bool, bool)> =
@@ -93,7 +106,9 @@ fn test_exclusive() {
         (false, true)
     ]));
 
-    g.data.push(suggestion);
+    g.data.push(suggestion.clone());
+
+    assert!(!g.contains_choice(&suggestion, 0));
 
     g.push_pairs([
         (true, true), // is swimming, can stop.
