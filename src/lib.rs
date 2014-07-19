@@ -4,9 +4,13 @@
 //! A library for modelling and reasoning about multidimensional
 //! binary states.
 
+#[cfg(test)]
+extern crate debug;
+
 use std::collections::Bitv;
 
 /// Contains a binary state and the choices.
+#[deriving(PartialEq, Eq, Show)]
 pub struct BinStateChoices {
     /// The state composed of bits.
     pub state: Bitv,
@@ -47,6 +51,22 @@ impl<TAction> BinGraph<TAction> {
     pub fn push_pairs(&mut self, pairs: &[(bool, bool)]) {
         self.data.push(BinStateChoices::from_pairs(pairs));
     }
+
+    /// Returns the suggestion in default state that are open to all choices.
+    pub fn default_suggestion(&self) -> BinStateChoices {
+        let open_for_all_choices: Vec<(bool, bool)> =
+            range(0, self.actions.len()).map(|_| (false, true)).collect();
+        BinStateChoices::from_pairs(open_for_all_choices.as_slice())
+    }
+
+    /// Suggests a missing state with choices.
+    pub fn suggestion(&self) -> Option<BinStateChoices> {
+        if self.data.len() == 0 {
+            Some(self.default_suggestion())
+        } else {
+            None
+        }
+    }
 }
 
 #[test]
@@ -55,10 +75,14 @@ fn test_exclusive() {
     g.actions.push("Go swiming");
     g.actions.push("Read a book");
 
-    g.push_pairs([
-        (false, true), // go swimming
-        (false, true), // read a book
-    ]);
+    let suggestion = g.suggestion().unwrap();
+    assert_eq!(suggestion, BinStateChoices::from_pairs([
+        (false, true),
+        (false, true)
+    ]));
+
+    g.data.push(suggestion);
+
     g.push_pairs([
         (true, true), // is swimming, can stop.
         (false, false), // is not reading book, can't read book.
