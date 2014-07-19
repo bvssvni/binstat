@@ -10,7 +10,7 @@ extern crate debug;
 use std::collections::Bitv;
 
 /// Contains a binary state and the choices.
-#[deriving(PartialEq, Eq, Show)]
+#[deriving(PartialEq, Eq, Show, Clone)]
 pub struct BinStateChoices {
     /// The state composed of bits.
     pub state: Bitv,
@@ -24,6 +24,18 @@ impl BinStateChoices {
         BinStateChoices {
             state: pairs.iter().map(|&(a, _)| a).collect(),
             choices: pairs.iter().map(|&(_, b)| b).collect()
+        }
+    }
+
+    /// Iterate for each available choice.
+    #[inline(always)]
+    pub fn with_choices(&self, f: |i: uint|) {
+        for i in range(0, self.choices.len())
+            .zip(self.choices.iter())
+            .filter(|&(_, v)| v == true)
+            .map(|(i, _)| i
+        ) {
+            f(i)
         }
     }
 }
