@@ -1,15 +1,4 @@
-#![crate_name = "binstat"]
-#![deny(missing_doc)]
-
-//! A library for modelling and reasoning about multidimensional
-//! binary states.
-
-#[cfg(test)]
-extern crate debug;
-
-pub use binnode::BinNode;
-
-mod binnode;
+use BinNode;
 
 /// Models a multidimensional binary state.
 pub struct BinGraph<TAction> {
